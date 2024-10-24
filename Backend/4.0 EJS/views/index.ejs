@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>EJS Page</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <h1>
+            Hello! It's <%= weekMessage %>
+        </h1>
+        <% if (currentDay === birth_day && currentMonth === birth_month)  { %>
+            <h1><%= happyBirthday %></h1>
+            <% } %>
+    </body>
+</html>

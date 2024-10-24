@@ -1,0 +1,8 @@
+.correct-location {
+    display: flex;
+    justify-content: center;
+}
+
+textarea {
+    resize: none;
+}

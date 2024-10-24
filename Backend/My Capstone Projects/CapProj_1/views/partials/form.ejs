@@ -1,0 +1,7 @@
+<form action="/submit" method="POST" id="form-correction">
+    <% for(let i = 0; i < RPS_en.length; i++) { %>
+        <input   type="submit"   name=<%= RPS_en[i] %>  value=<%= RPS_rus[i] %> class="btn-choise btn-size">
+    <% } %>
+    <!-- Для отправки любой формы необходим тип ввода "submit", даже если это просто кнопка.
+    Но вообще для подобных вещей удобно использовать Anchor Tag -->
+</form>

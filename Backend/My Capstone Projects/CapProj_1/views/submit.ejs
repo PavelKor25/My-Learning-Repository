@@ -1,0 +1,41 @@
+<%- include("partials/header.ejs") %>
+
+<%
+function winningCheck() {
+    const winningIndications = ["камень ножницы", "ножницы бумага", "бумага камень"];
+    const playerCompIndication = playerChosenOpt + " " + compChosenOpt;
+
+    let playerWins = false;
+
+    winningIndications.forEach((element) => {
+        if(playerCompIndication === element) {
+            console.log(playerCompIndication === element);
+            // ТОНКОСТЬ: важно для любого булевого значения использовать переменную для него. И возвращать его не внутри дочерней, а внутри основной функции.
+            playerWins = true;
+        }});
+    
+    return playerWins;
+};
+%>
+
+<main class="main-flex result">
+    <div class="big-letters">
+        <%
+    if(compChosenOpt === playerChosenOpt) { %>
+        <strong>Ничья!</strong>
+        <p>Еще попытка!</p>
+        <%- include("partials/form.ejs") %>
+    <% } else if(winningCheck()) { %>
+        <strong>Победа! 😎</strong>
+        <p>Пробуем еще?</p>
+        <a href="/" class="button">Давай!</a>
+    <% } else { %>
+        <strong>Поражение... 😢</strong>
+        <p>Может, в следующий раз получится?</p>
+        <a href="/" class="button">Еще раз!</a>
+    <% } %>
+    </div>
+    
+</main>
+
+<%- include("partials/footer.ejs") %>

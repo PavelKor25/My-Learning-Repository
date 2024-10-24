@@ -1,0 +1,18 @@
+<%- include("partials/header.ejs") %>
+
+<div class="container-fluid bg-dark py-3">
+    <main>
+        <h1 class="text-center text-light py-4">Your Blog</h1>
+        <h2 class="text-center text-light py-3">Enter Your post below and then press "Send"</h2>
+
+        <form action="/" method="POST" class="correct-location py-3">
+            <textarea name="message" rows="5" cols="60" placeholder="Enter your text here"></textarea>
+        </form>
+
+        <% if(locals.posted) { %>
+            <p>Your posts:</p>
+        <% } %>
+    </main>
+</div>
+
+<%- include("partials/footer.ejs") %>

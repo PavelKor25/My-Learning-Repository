@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Name Letters</title>
+</head>
+
+<body>
+  <!-- Write your code here -->
+   <!-- Здесь можно использовать и булево значение, как я и планировал, но просто
+      очень важно понять принцип работы locals.numLetters, а именно: он проверяет наличие
+      элемента в res.render(). Но здесь булева переменная лучше выполняет свою работу -->
+   <% if(!(locals.numLetters)) { %>
+      <h1>Enter your name here</h1>
+   <% } else if (numLetters !== 0) { %>
+      <h1>There are <%= numLetters %> letters of your name.</h1>
+    <% } else { %>
+      <h1>Please, enter in fields below your First and Last Name.</h1>
+    <% } %>
+  <form action="/submit" method="POST">
+    <input type="text" name="fName" placeholder="First name">
+    <input type="text" name="lName" placeholder="Last name">
+    <input type="submit" value="OK">
+  </form>
+</body>
+
+</html>

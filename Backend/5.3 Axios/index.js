@@ -37,7 +37,17 @@ app.post("/", async (req, res) => {
   // Pass an error to the index.ejs to tell the user:
   // "No activities that match your criteria."
 
-  const request = await axios.request()
+  try {
+    const typeOfAct = req.body.type;
+    const participants = req.body.participants;
+    const response = await axios.get(`https://bored-api.appbrewery.com/filter?type=${typeOfAct}&participants=${participants}`);
+    const activities = response.data;
+    console.log(activities);
+    res.render("index.ejs", { data: activities[Math.floor(Math.random() * activities.length)] });
+ } catch (error) {
+    console.error("No activities that match your criteria.", error.message);
+    res.render("index.ejs", { error: "No activities that match your criteria." });
+ }
 });
 
 app.listen(port, () => {

@@ -25,7 +25,7 @@ app.get("/noAuth", async (req, res) => {
     res.render("index.ejs", {
       content: randSecret,
     });
-  } catch {
+  } catch (error) {
     console.log("You've got an error. Sorry!");
     res.render("index.ejs", {
       content: error.message,
@@ -50,15 +50,15 @@ app.get("/basicAuth", async (req, res) => {
     const response = await axios.get(
       "https://secrets-api.appbrewery.com/all?page=2", {
         auth: {
-          username: "Ronald",
-          password: "Tolkin",
+          username: yourUsername,
+          password: yourPassword,
         },    /* Запятые ставить полезно: становится ясно, что это элемент объекта (т е объект внутри объекта) */
       });
     const pageOfSecrets = JSON.stringify(response.data);
     res.render("index.ejs", {
       content: pageOfSecrets,
     });
-  } catch {
+  } catch (error) {
     console.log("You've got an error. Sorry!");
     res.render("index.ejs", {
       content: error.message,
@@ -77,7 +77,7 @@ app.get("/apiKey", async (req, res) => {
     res.render("index.ejs", {
       content: filteredSecrets,
     });
-  } catch {
+  } catch (error) {
     console.log("You've got an error. Sorry!");
     res.render("index.ejs", {
       content: error.message,
@@ -108,7 +108,7 @@ app.get("/bearerToken", async (req, res) => {
     res.render("index.ejs", {
       content: idSecret,
     });
-  } catch {
+  } catch (error) {
     console.log("You've got an error. Sorry!");
     res.render("index.ejs", {
       content: error.message,

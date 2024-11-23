@@ -7,7 +7,7 @@ const app = express();
 
 const URL_API = "https://v2.jokeapi.dev/";
 const API_getJoke = URL_API + "joke/";
-const safeMode = "?safe-mode";
+const safeMode = "safe-mode";
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -18,14 +18,25 @@ app.get("/", (req, res) => {
 
 app.post("/joke", async (req, res) => {
     try {
-        const response = await axios.get(API_getJoke + req.body.jokeBtn + safeMode);
-        console.log(API_getJoke + req.body.jokeBtn + safeMode);
-        const joke = JSON.stringify(response.data);
-        res.render("index.ejs", {
-            content: joke,
-        })
+        const result = await axios.get(API_getJoke + req.body.jokeBtn + `?${safeMode}`);
+        console.log(result.data);
+        if(result.data.type = "twopart") {
+            const setup = result.data.setup;
+            const delivery = result.data.delivery;
+            res.render("index.ejs", {
+                setupContent: setup,
+                deliveryContent: delivery,
+            })
+        } else if(result.data.type = "single") {
+            const singleJoke = result.data.joke;
+            res.render("index.ejs", {
+                jokeContent: singleJoke,
+            })
+        }
     } catch(error) {
-        console.log(error.response.data);
+        res.render("error.ejs", {
+            err: error.response.data,
+        });
     }
 
 });

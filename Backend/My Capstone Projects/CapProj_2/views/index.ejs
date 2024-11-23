@@ -4,27 +4,39 @@
 
 <head>
     <title>Joke experience</title>
+    <meta charset="utf-8">
 </head>
 
 <body>
     <h1>Joke generator</h1>
-    <% if(!(locals.content)) { %>
-    <h2>Choose type of joke You want to get</h2>
-    <% } %>
+
     <form id="myForm" action="/joke" method="post">
-        <input id="anyJoke" type="button" value="Any" name="jokeBtn">
-        <input id="miskJoke" type="button" value="Misk" name="jokeBtn">
-        <input id="programmingJoke" type="button" value="Programming" name="jokeBtn">
-        <input id="darkJoke" type="button" value="Dark" name="jokeBtn">
-        <input id="punJoke" type="button" value="Pun" name="jokeBtn">
-        <input id="spookyJoke" type="button" value="Spooky" name="jokeBtn">
-        <input id="christmasJoke" type="button" value="Christmas" name="jokeBtn">
+        <% if(!(locals.jokeContent)) { %>
+            <h2>Choose type of joke You want to get</h2>
+        <% } else { %>
+            <h2>Choose another joke</h2>
+        <% } %>
+        <!-- Запомни: в форме необходима хотя бы одна кнопка типа submit для отправки формы, остальные вводы могут быть чем угодно. -->
+        <input id="anyJoke" type="submit" value="Any" name="jokeBtn">
+        <input id="miscJoke" type="submit" value="Misc" name="jokeBtn">
+        <input id="programmingJoke" type="submit" value="Programming" name="jokeBtn">
+        <input id="punJoke" type="submit" value="Pun" name="jokeBtn">
+        <input id="spookyJoke" type="submit" value="Spooky" name="jokeBtn">
+        <input id="christmasJoke" type="submit" value="Christmas" name="jokeBtn">
+        <input id="errorJoke" type="submit" value="Error" name="jokeBtn">
     </form>
 
-    <% if(locals.content) { %>
+    <% if(locals.jokeContent) { %>
         <p> 
-            <%= content %>
+            <%= jokeContent %>
         </p>
+    <% } %>
+
+    <% if(locals.setupContent) { %>
+        <li>
+            <ul>Setup: <%= setupContent %></ul>
+            <ul>Delivery: <%= deliveryContent %></ul>
+        </li>
     <% } %>
 </body>
 

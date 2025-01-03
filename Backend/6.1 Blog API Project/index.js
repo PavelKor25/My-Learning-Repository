@@ -41,14 +41,77 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //Write your code here//
 
 //CHALLENGE 1: GET All posts
+app.get("/posts", (req, res) => {
+  res.json(posts);
+});
 
 //CHALLENGE 2: GET a specific post by id
 
+/* Задача серверных файлов API - в задании шаблонов внутри url.
+  Команда axios выполняет клиентскую работу, подставляя на место :id
+  тот id, который был запрошен клиентом (пользователем) */
+app.get("/posts/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = posts.findIndex((post) => post.id === id);
+  res.json(posts[index]);
+});
+
 //CHALLENGE 3: POST a new post
 
+/* Не очевидный момент для понимания порядка работы команд серверов: сначала выполняется запрос клиента командой
+  axios.post, и уже потом выполняется серверная команда app.post, с учетом тех данных, которые были отправлены axios.post
+  (т.е. параметр req.body как аргумент) */
+app.post("/posts", (req, res) => {
+  const date = new Date();
+
+  const newPost = {
+    id: ++lastId,
+    title: req.body.title,
+    content: req.body.content,
+    author: req.body.author,
+    date: date,
+  };
+  posts.push(newPost);
+  res.json(newPost);
+});
+
 //CHALLENGE 4: PATCH a post when you just want to update one parameter
+app.patch("/posts/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+
+  /* В этом коде скрыты сразу 3 удивительных факта об объектах и свойствах переменных:
+      1) Начнем с того, что переменные бывают двух типов: простые и составные. Составные - это объекты, массивы и функции
+        (да, функции - тоже переменные!). Простые - это строки и числа.
+      2) Простые переменные-константы запрещено менять, а у составных констант есть запрет лишь на их изменение в их собственной
+        форме (для объектов - количество параметров, для массивов - кол-во элементов) Сами дочерние элементы и их содержимое менять можно!
+        В данном примере мы это видим.
+      3) Самое удивительное: составные переменные присваиваются всегда по ссылке, а это значит, что изменение новой переменной
+        отразится на старой! Поэтому здесь мы в итоге получаем измененный объект в массиве, а не только измененный новый объект */
+
+  const currentPost = posts.find((post) => post.id === id);
+
+  /* Оказывается, строчные блоки в условиях можно не обрамлять фигурными скобками */
+  if(req.body.title) currentPost.title = req.body.title;
+  if(req.body.content) currentPost.content = req.body.content;
+  if(req.body.author) currentPost.author = req.body.author;
+
+  res.json(currentPost);
+});
 
 //CHALLENGE 5: DELETE a specific post by providing the post id.
+app.delete("/posts/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  /* Последняя тонкость: если необходимо удалить объект в массиве, то нам кроме этого еще и необходимо избавиться от пустой
+    ячейки массива. Поэтому метод splice настолько удобен и почти незаменим в случае массивов! */
+  const index = posts.findIndex((post) => post.id === id);
+
+  if(index > -1) {
+    posts.splice(index, 1);
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(404);
+  }
+});
 
 app.listen(port, () => {
   console.log(`API is running at http://localhost:${port}`);

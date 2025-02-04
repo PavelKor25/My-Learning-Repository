@@ -19,28 +19,40 @@ app.use(express.static("public"));
 
 let currentUserId = 1;
 
-let users = [
-  { id: 1, name: "Angela", color: "teal" },
-  { id: 2, name: "Jack", color: "powderblue" },
-];
-
-async function checkVisisted() {
-  const result = await db.query("SELECT country_code FROM visited_countries");
+async function checkVisisted() {    // Сделано!
+  const result = await db.query(
+    `SELECT country_code FROM visited_countries WHERE user_id = $1`,
+    [currentUserId]);
   let countries = [];
   result.rows.forEach((country) => {
     countries.push(country.country_code);
   });
   return countries;
 }
-app.get("/", async (req, res) => {
+
+async function selectUserColor() {
+  const result = await db.query(
+    `SELECT color FROM users WHERE id = $1`,
+    [currentUserId]
+  );
+  const userColor = result.rows[0].color;
+  console.log(userColor);
+  return userColor;
+}
+
+app.get("/", async (req, res) => {    // ОК
+  const result = await db.query("SELECT * FROM users");
+  const users = result.rows;
   const countries = await checkVisisted();
+  const userColor = await selectUserColor();
   res.render("index.ejs", {
     countries: countries,
     total: countries.length,
     users: users,
-    color: "teal",
+    color: userColor,
   });
 });
+
 app.post("/add", async (req, res) => {
   const input = req.body["country"];
 
@@ -54,9 +66,11 @@ app.post("/add", async (req, res) => {
     const countryCode = data.country_code;
     try {
       await db.query(
-        "INSERT INTO visited_countries (country_code) VALUES ($1)",
-        [countryCode]
+        `INSERT INTO visited_countries (country_code, user_id)
+        VALUES ($1, $2)`,
+        [countryCode, currentUserId]
       );
+      /* Крайне неочевидный момент: при перенаправлении к URL всегда будет выполняться метод app.get(URL) в дополнении к этому методу. */
       res.redirect("/");
     } catch (err) {
       console.log(err);
@@ -65,11 +79,29 @@ app.post("/add", async (req, res) => {
     console.log(err);
   }
 });
-app.post("/user", async (req, res) => {});
+app.post("/user", async (req, res) => {
+  if(req.body["user"]) {
+    currentUserId = req.body["user"];
+    res.redirect("/");
+  }
+  if(req.body["add"]) {
+    res.render("new.ejs");
+  }
+});
 
 app.post("/new", async (req, res) => {
   //Hint: The RETURNING keyword can return the data that was inserted.
   //https://www.postgresql.org/docs/current/dml-returning.html
+  try {
+    const result = await db.query(
+    `INSERT INTO users (name, color) VALUES ($1, $2) RETURNING id`,
+    [req.body["name"], req.body["color"]]);
+    currentUserId = result.rows[0].id;
+    console.log(currentUserId);
+    res.redirect("/");
+  } catch(err) {
+    console.log(err);
+  }
 });
 
 app.listen(port, () => {

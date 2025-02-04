@@ -19,6 +19,10 @@ app.use(express.static("public"));
 
 let currentUserId = 1;
 
+/* Эта переменная необходима для трех целей:
+  1) Для проверки работоспособности SQL команд за неимением pgAdmin-а.
+  2) Для понимания структуры таблицы без необходимости заглядывания в pgAdmin
+  3) (И это главное): для удобства чтения кода.*/
 let users = [
   { id: 1, name: "Angela", color: "teal" },
   { id: 2, name: "Jack", color: "powderblue" },
@@ -26,6 +30,12 @@ let users = [
 
 async function checkVisisted() {
   const result = await db.query(
+    /* "JOIN users ON ..." до WHERE здесь не нужен, но для других
+    разработчиков может быть полезен в дальнейшем. К тому же так
+    стороннему читателю проще понять код (представь себе, что откуда ни возьмись
+    берется значение user_id, хотя тут явно используется таблица со странами. Команда
+    JOIN дает понимание, что одна таблица связана с другой.)
+    Вообще, как я понимаю, при выборе второстепенной таблицы лучше всегда добавлять основную */
     "SELECT country_code FROM visited_countries JOIN users ON users.id = user_id WHERE user_id = $1; ",
     [currentUserId]
   );
@@ -36,6 +46,8 @@ async function checkVisisted() {
   return countries;
 }
 
+/* Данный метод более многофункциональный, так как возвращает полный
+  набор параметров для юзера. */
 async function getCurrentUser() {
   const result = await db.query("SELECT * FROM users");
   users = result.rows;

@@ -7,17 +7,17 @@ const app = express();
 const port = 3000;
 const saltRounds = 10;
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+
 const db = new pg.Client({
   user: "postgres",
   host: "localhost",
-  database: "users",
+  database: "secrets",
   password: "123456",
   port: 5432,
 });
 db.connect();
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.render("home.ejs");
@@ -36,34 +36,35 @@ app.post("/register", async (req, res) => {
   const password = req.body.password;
 
   try {
-    const checkResult = await db.query(
-      "SELECT * FROM users WHERE email = $1", 
-      [email]);
+    const checkResult = await db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
 
     if (checkResult.rows.length > 0) {
       res.send("Email already exists. Try logging in.");
     } else {
-      // Hashing password
+      //hashing the password and saving it in the database
       bcrypt.hash(password, saltRounds, async (err, hash) => {
-        if(err) {
-          console.log("Error hashing password: ", err);
+        if (err) {
+          console.error("Error hashing password:", err);
         } else {
-          const result = await db.query(
+          console.log("Hashed Password:", hash);
+          await db.query(
             "INSERT INTO users (email, password) VALUES ($1, $2)",
             [email, hash]
           );
-          console.log(result);
           res.render("secrets.ejs");
         }
-      })};
-    } catch (err) {
+      });
+    }
+  } catch (err) {
     console.log(err);
   }
 });
 
 app.post("/login", async (req, res) => {
   const email = req.body.username;
-  const enteredPassword = req.body.password;
+  const loginPassword = req.body.password;
 
   try {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
@@ -71,18 +72,18 @@ app.post("/login", async (req, res) => {
     ]);
     if (result.rows.length > 0) {
       const user = result.rows[0];
-      const storedHash = user.password;
-
-      bcrypt.compare(enteredPassword, storedHash, (err, correct) => {
-        if(err) {
-          console.log("Error comparing passwords: ", err);
-        } else if(correct) {
-          console.log(correct);
-          res.render("secrets.ejs");
+      const storedHashedPassword = user.password;
+      bcrypt.compare(loginPassword, storedHashedPassword, (err, result) => {
+        if (err) {
+          console.error("Error comparing passwords:", err);
         } else {
-          console.log("Password is not correct.");
+          if (result) {
+            res.render("secrets.ejs");
+          } else {
+            res.send("Incorrect Password");
+          }
         }
-      })
+      });
     } else {
       res.send("User not found");
     }

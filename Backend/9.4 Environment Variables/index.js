@@ -149,3 +149,5 @@ passport.deserializeUser((user, cb) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+// Комменатрий для теста Source Control

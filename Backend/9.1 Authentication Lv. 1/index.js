@@ -38,7 +38,7 @@ app.post("/register", async (req, res) => {
       [email]
     );
     if(checkResult.rows.length > 0) {
-      res.send("This email is already exists, please choose another one.");
+      res.send("This email is already registered.");
     } else {
       try {
         await db.query(

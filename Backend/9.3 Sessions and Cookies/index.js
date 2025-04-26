@@ -4,6 +4,7 @@ import pg from "pg";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import passport from "passport";
+import { Strategy } from "passport-local";
 
 const app = express();
 const port = 3000;
@@ -15,7 +16,10 @@ app.use(express.static("public"));
 app.use(session({
   secret: "Cookies, Salts and Two Redisses",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24
+  }
 }));
 
 app.use(passport.initialize());
@@ -43,6 +47,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/secrets", (req, res) => {
+  console.log(req.user);
   if (req.isAuthenticated()) {
     res.render("secrets.ejs");
   } else {
@@ -68,11 +73,17 @@ app.post("/register", async (req, res) => {
           console.error("Error hashing password:", err);
         } else {
           console.log("Hashed Password:", hash);
-          await db.query(
-            "INSERT INTO users (email, password) VALUES ($1, $2)",
+          const result = await db.query(
+            "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
             [email, hash]
           );
-          res.render("secrets.ejs");
+          const user = result.rows[0];
+          req.login(user, (err) => {
+            if(err) {
+              console.log(err);
+            }
+            res.redirect("/secrets");
+          });
         }
       });
     }
@@ -81,34 +92,60 @@ app.post("/register", async (req, res) => {
   }
 });
 
-app.post("/login", async (req, res) => {
-  const email = req.body.username;
-  const loginPassword = req.body.password;
+/* Теперь колбэк-функцию выполняет стратегия при аутентификации пользователя (см. ниже)
+  Функция passport.authenticate() дает выполнить функцию вызова стратегии ниже */
+app.post("/login", passport.authenticate("local", {
+  successRedirect: "/secrets",
+  failureRedirect: "/login"
+}));
 
+/* Данный метод выполняет верификацию пользователя каждый раз при заходе на страницу.
+  В первый раз вручную (через passport.authenticate()), в дальнейшем - автоматически. */
+passport.use(
+  new Strategy(
+    async function verify(username, password, cb) {
+  /* Функция Verify
+    В аргументах username, password уже находятся данные, введенные пользователем.
+    (Они сохраняются вместе со Strategy столько, сколько длится сессия)
+    Именно здесь и проводится проверка соответствия логина/пароля с введенным пользователем,
+    а также направление пользователя на страницу после успешной верификации.*/
   try {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
-      email,
+      username,
     ]);
     if (result.rows.length > 0) {
       const user = result.rows[0];
       const storedHashedPassword = user.password;
-      bcrypt.compare(loginPassword, storedHashedPassword, (err, result) => {
+      bcrypt.compare(password, storedHashedPassword, (err, valid) => {
+        /* Запомним важный принцип: всегда сначала проверяется наличие ошибок внутренних (сервера),
+          а потом внешних (клиентских), ведь проверка второго не имеет смысла, если есть ошибки в первом.
+          поэтому в cb() первый аргумент проверяет серверную проблему, а второй - клиентскую */
         if (err) {
-          console.error("Error comparing passwords:", err);
+          return cb(err);
         } else {
-          if (result) {
-            res.render("secrets.ejs");
+          if (valid) {
+            return cb(null, user);
           } else {
-            res.send("Incorrect Password");
+            return cb(null, false);
           }
         }
       });
     } else {
-      res.send("User not found");
+      return cb("User not found");
     }
   } catch (err) {
-    console.log(err);
+    return cb(err);
   }
+}));
+
+/* Метод, определяющий, что необходимо сохранить пользователю при повторном посещении сайта */
+passport.serializeUser((user, cb) => {
+  cb(null, user);
+});
+
+/* Метод, использующий сохраненную информацию для восстановления во время повторного посещения. */
+passport.deserializeUser((user, cb) => {
+  cb(null, user);
 });
 
 app.listen(port, () => {

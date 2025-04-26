@@ -79,6 +79,7 @@ app.post("/add", async (req, res) => {
     console.log(err);
   }
 });
+
 app.post("/user", async (req, res) => {
   if(req.body["user"]) {
     currentUserId = req.body["user"];

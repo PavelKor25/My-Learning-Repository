@@ -1,6 +1,8 @@
 desktop.ini
 .vscode
 Databases
+.DS_Store
+OAuth.txt
 
 # Logs
 logs

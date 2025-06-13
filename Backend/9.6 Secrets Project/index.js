@@ -56,9 +56,24 @@ app.get("/logout", (req, res) => {
   });
 });
 
-app.get("/secrets", (req, res) => {
+app.get("/secrets", async (req, res) => {
   if (req.isAuthenticated()) {
-    res.render("secrets.ejs");
+    try {
+      const result = await db.query(
+        "SELECT * FROM users WHERE email = $1",
+        [req.user.email]);
+      if(result.rows.length < 2) {
+        const userSecret = (result.rows.length === 1) ? result.rows[0].secret : "I don't have any idea what secret to add.";
+        res.render("secrets.ejs", {
+          secret: userSecret,
+        });
+      } else {
+        res.sendStatus(500);
+      }
+    } catch(err) {
+      console.error(err);
+      res.sendStatus(500);
+    }
 
     //TODO: Update this to pull in the user secret to render in secrets.ejs
   } else {
@@ -68,6 +83,15 @@ app.get("/secrets", (req, res) => {
 
 //TODO: Add a get route for the submit button
 //Think about how the logic should work with authentication.
+/* ВАЖНОЕ ПРАВИЛО: любая страница, связанная только лишь с конфиденциальной страницей, также должна быть
+  доступна только после аутентификации. */
+app.get("/submit", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render("submit.ejs");
+  } else {
+    res.redirect("/login");
+  }
+});
 
 app.get(
   "/auth/google",
@@ -102,7 +126,7 @@ app.post("/register", async (req, res) => {
     ]);
 
     if (checkResult.rows.length > 0) {
-      req.redirect("/login");
+      res.redirect("/login");
     } else {
       bcrypt.hash(password, saltRounds, async (err, hash) => {
         if (err) {
@@ -127,6 +151,23 @@ app.post("/register", async (req, res) => {
 
 //TODO: Create the post route for submit.
 //Handle the submitted data and add it to the database
+/* После аут-ции данные пользователя сохранены в req.user, поэтому оттуда и необх. подобрать емейл. */
+app.post("/submit", async (req, res) => {
+  /* Может возникнуть вопрос: "Зачем здесь проверять аутентификацию юзера, если переход по данному маршруту возможен
+    лишь при заполнении формы, а не при попытке перехода по url непосредственно?" Но это не отменяет Postman, а также
+    то, что при завершении сессии УЖЕ неавторизованный пользователь может попробовать заполнить форму. */
+  if(req.isAuthenticated()) {
+    try {
+      await db.query(
+        "UPDATE users SET secret = $1 WHERE email = $2",
+        [req.body.secret, req.user.email]);
+      res.redirect("/secrets");
+    } catch(err) {
+      console.error(err);
+      res.sendStatus(500);
+  }
+  } else res.redirect("/login");
+});
 
 passport.use(
   "local",
